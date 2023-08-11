@@ -8,29 +8,41 @@ typedef DependencyBuilder<T> = FutureOr<T> Function(
   String? key,
 });
 
-final Map<String, DependencyBuilder<dynamic>> _dependencies = {};
+/// A function that finds a caching key given a context
+typedef KeyFinder = FutureOr<String> Function(RequestContext context);
+
+typedef _CachedDependencyBuilder<T> = FutureOr<T> Function(
+  RequestContext context,
+);
+
+final Map<String, _CachedDependencyBuilder<dynamic>> _dependencyBuilders = {};
 final Map<String, dynamic> _cache = {};
 
 /// A [Middleware] that injects a dependency asynchronously and caches it for
 /// future use.
 Middleware futureProvider<T>(
   DependencyBuilder<T> create, {
+  KeyFinder? keyFinder,
   bool shouldCache = true,
   bool Function(T)? cacheValid,
 }) {
   return (handler) {
     return (outerContext) {
-      final saved = _dependencies[T.toString()];
+      final saved = _dependencyBuilders[T.toString()];
       if (saved == null) {
         if (shouldCache) {
-          _dependencies[T.toString()] = (context, {key}) => _asyncMemo<T>(
-                () => create(context, key: key),
-                key: key,
-                cacheValid: cacheValid,
-              );
+          _dependencyBuilders[T.toString()] = (context) async {
+            final key = await keyFinder?.call(
+              context,
+            );
+            return _asyncMemo<T>(
+              () => create(context, key: key),
+              key: key,
+              cacheValid: cacheValid,
+            );
+          };
         } else {
-          _dependencies[T.toString()] =
-              (context, {key}) => create(context, key: key);
+          _dependencyBuilders[T.toString()] = (context) => create(context);
         }
       }
       return handler(outerContext);
@@ -45,8 +57,8 @@ Future<T> _asyncMemo<T>(
 }) async {
   final cacheKey = key ?? T.toString();
   final cachedValue = _cache[cacheKey] as T?;
-  final currentCacheValidChecker = cacheValid ?? ((T _) => true);
-  if (cachedValue != null && currentCacheValidChecker(cachedValue)) {
+  if (cachedValue != null &&
+      (cacheValid == null || cacheValid.call(cachedValue))) {
     return cachedValue;
   }
   final value = await create();
@@ -60,17 +72,17 @@ extension RequestContextAsync on RequestContext {
   ///
   /// An [Exception] is thrown if [T] is not available within
   /// the provided [request] context.
-  Future<T> readAsync<T>({String? key}) async {
-    final depBuilder = _dependencies[T.toString()];
+  Future<T> readAsync<T>() async {
+    final depBuilder = _dependencyBuilders[T.toString()];
     if (depBuilder == null) {
       throw Exception('Missing create function for type $T');
     }
-    final dep = await depBuilder(this, key: key);
+    final dep = await depBuilder(this);
     if (dep is T) {
       return dep;
     }
     throw Exception(
-      'Dependency for key $key was type ${dep.runtimeType.runtimeType}. '
+      'Dependency for $T was type ${dep.runtimeType.runtimeType}. '
       'Expected $T',
     );
   }
