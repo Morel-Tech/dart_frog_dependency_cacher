@@ -27,14 +27,14 @@ Middleware futureProvider<T>(
   bool Function(T)? cacheValid,
 }) {
   return (handler) {
-    return (outerContext) {
+    return (outerContext) async {
+      final key = await keyFinder?.call(
+        outerContext,
+      );
       final saved = _dependencyBuilders[T.toString()];
       if (saved == null) {
         if (shouldCache) {
           _dependencyBuilders[T.toString()] = (context) async {
-            final key = await keyFinder?.call(
-              context,
-            );
             return _asyncMemo<T>(
               () => create(context, key: key),
               key: key,
