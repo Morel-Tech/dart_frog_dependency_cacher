@@ -9,7 +9,7 @@ typedef DependencyBuilder<T> = FutureOr<T> Function(
 });
 
 /// A function that finds a caching key given a context
-typedef KeyFinder = FutureOr<String> Function(RequestContext context);
+typedef KeyFinder = FutureOr<String?> Function(RequestContext context);
 
 typedef _CachedDependencyBuilder<T> = FutureOr<T> Function(
   RequestContext context,
