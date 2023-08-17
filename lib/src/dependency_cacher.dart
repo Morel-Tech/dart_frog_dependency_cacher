@@ -28,21 +28,21 @@ Middleware futureProvider<T>(
 }) {
   return (handler) {
     return (outerContext) async {
-      final saved = _dependencyBuilders[T.toString()];
-      if (saved == null) {
-        if (shouldCache) {
-          _dependencyBuilders[T.toString()] = (context) async {
-            final key = await keyFinder?.call(context);
-            return _asyncMemo<T>(
-              () => create(context, key: key),
-              key: key,
-              cacheValid: cacheValid,
-            );
-          };
-        } else {
-          _dependencyBuilders[T.toString()] = (context) => create(context);
-        }
+      final resolvedBuilderCacheKey = T.toString();
+      if (shouldCache) {
+        _dependencyBuilders[resolvedBuilderCacheKey] = (context) async {
+          final key = await keyFinder?.call(context);
+          return _asyncMemo<T>(
+            () => create(context, key: key),
+            key: key,
+            cacheValid: cacheValid,
+          );
+        };
+      } else {
+        _dependencyBuilders[resolvedBuilderCacheKey] =
+            (context) => create(context);
       }
+
       return handler(outerContext);
     };
   };
