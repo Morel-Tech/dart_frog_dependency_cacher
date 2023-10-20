@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs
+
 import 'dart:async';
 
 import 'package:dart_frog/dart_frog.dart';
@@ -15,7 +17,6 @@ typedef _CachedDependencyBuilder<T> = FutureOr<T> Function(
   RequestContext context,
 );
 
-final Map<String, _CachedDependencyBuilder<dynamic>> _dependencyBuilders = {};
 final Map<String, dynamic> _cache = {};
 
 /// A [Middleware] that injects a dependency asynchronously and caches it for
@@ -28,10 +29,12 @@ Middleware futureProvider<T>(
 }) {
   return (handler) {
     return (outerContext) async {
-      final saved = _dependencyBuilders[T.toString()];
+      final dependencies =
+          outerContext.read<_DartFrogCachedDependencyBuilders>();
+      final saved = dependencies[T.toString()];
       if (saved == null) {
         if (shouldCache) {
-          _dependencyBuilders[T.toString()] = (context) async {
+          dependencies[T.toString()] = (context) async {
             final key = await keyFinder?.call(context);
             return _asyncMemo<T>(
               () => create(context, key: key),
@@ -40,7 +43,7 @@ Middleware futureProvider<T>(
             );
           };
         } else {
-          _dependencyBuilders[T.toString()] = (context) => create(context);
+          dependencies[T.toString()] = (context) => create(context);
         }
       }
       return handler(outerContext);
@@ -71,7 +74,8 @@ extension RequestContextAsync on RequestContext {
   /// An [Exception] is thrown if [T] is not available within
   /// the provided [request] context.
   Future<T> readAsync<T>() async {
-    final depBuilder = _dependencyBuilders[T.toString()];
+    final dependencies = read<_DartFrogCachedDependencyBuilders>();
+    final depBuilder = dependencies[T.toString()];
     if (depBuilder == null) {
       throw Exception('Missing create function for type $T');
     }
@@ -84,4 +88,13 @@ extension RequestContextAsync on RequestContext {
       'Expected $T',
     );
   }
+}
+
+class _DartFrogCachedDependencyBuilders {
+  final Map<String, _CachedDependencyBuilder<dynamic>> _dependencyBuilders = {};
+
+  _CachedDependencyBuilder<dynamic>? operator [](String key) =>
+      _dependencyBuilders[key];
+  void operator []=(String key, _CachedDependencyBuilder<dynamic> builder) =>
+      _dependencyBuilders[key] = builder;
 }
