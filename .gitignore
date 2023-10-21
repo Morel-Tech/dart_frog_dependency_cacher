@@ -8,3 +8,5 @@ pubspec.lock
 
 mason-lock.json
 .mason
+
+.DS_Store
