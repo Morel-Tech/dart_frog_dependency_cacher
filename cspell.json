@@ -3,11 +3,7 @@
   "ignorePaths": [],
   "dictionaryDefinitions": [],
   "dictionaries": [],
-  "words": [
-    "mocktail",
-    "cacher",
-    "pubspec"
-  ],
+  "words": ["cacher", "mocktail", "pana", "pubspec"],
   "ignoreWords": [],
   "import": []
 }
