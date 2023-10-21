@@ -10,16 +10,16 @@ on:
       - master
       - main
     paths:
-      - '.github/workflows/dart_frog_dependency_cacher_verify_and_test.yaml'
-      - '**'
+      - ".github/workflows/dart_frog_dependency_cacher_verify_and_test.yaml"
+      - "**"
 
   push:
     branches:
       - master
       - main
     paths:
-      - '.github/workflows/**'
-      - '**'
+      - ".github/workflows/**"
+      - "**"
 
 
 jobs:
