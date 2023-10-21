@@ -1,6 +1,6 @@
 name: dart_frog_dependency_cacher
 description: An opinionated caching and dependency injection suite for Dart Frog.
-version: 0.0.2
+version: 0.0.3
 repository: https://github.com/Morel-Tech/dart_frog_dependency_cacher
 
 environment:
