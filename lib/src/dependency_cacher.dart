@@ -25,20 +25,18 @@ Middleware futureProvider<T>(
 }) {
   return (handler) {
     return (context) async {
-      if (shouldCache) {
-        context.provide<Future<T>>(() async {
-          final key = await keyFinder?.call(context);
-          return _asyncMemo<T>(
-            () => create(context, key: key),
-            key: key,
-            cacheValid: cacheValid,
-          );
-        });
-      } else {
-        context.provide<Future<T>>(() => Future.value(create(context)));
-      }
+      final newContext = shouldCache
+          ? context.provide<Future<T>>(() async {
+              final key = await keyFinder?.call(context);
+              return _asyncMemo<T>(
+                () => create(context, key: key),
+                key: key,
+                cacheValid: cacheValid,
+              );
+            })
+          : context.provide<Future<T>>(() => Future.value(create(context)));
 
-      return handler(context);
+      return handler(newContext);
     };
   };
 }
