@@ -20,6 +20,9 @@ class _TestRequestContext implements RequestContext {
 
   @override
   Request get request => _MockRequest();
+
+  @override
+  Map<String, String> get mountedParams => throw UnimplementedError();
 }
 
 void main() {
