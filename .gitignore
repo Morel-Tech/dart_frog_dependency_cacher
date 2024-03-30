@@ -10,3 +10,4 @@ mason-lock.json
 .mason
 
 .DS_Store
+coverage

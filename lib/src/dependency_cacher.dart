@@ -46,7 +46,7 @@ Future<T> _asyncMemo<T>(
   String? key,
   bool Function(T)? cacheValid,
 }) async {
-  final cacheKey = key ?? T.toString();
+  final cacheKey = key != null ? '$T-//-$key' : T.toString();
   final cachedValue = _cache[cacheKey] as T?;
   if (cachedValue != null &&
       (cacheValid == null || cacheValid.call(cachedValue))) {
